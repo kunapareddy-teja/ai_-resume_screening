@@ -180,3 +180,19 @@ The response contains:
 - The Gemini API key is supplied through `GEMINI_API_KEY` and must not be committed to the repository.
 - The application requires network access to call the Gemini API.
 - Gemini API availability, quotas, rate limits, and model access are external dependencies.
+
+<img width="1581" height="907" alt="Screenshot 2026-09-09 212336" src="https://github.com/user-attachments/assets/a802d35a-6568-4730-8a94-f1d580c0e9c7" />
+
+<img width="1542" height="871" alt="Screenshot 2026-09-09 212354" src="https://github.com/user-attachments/assets/e87be630-71e2-4965-921f-d088ec1d9642" />
+<img width="1514" height="886" alt="Screenshot 2026-09-09 212346" src="https://github.com/user-attachments/assets/04a9a551-a4ec-4faf-ace0-c2ef4a8a1cb3" />
+
+
+
+<img width="1567" height="706" alt="Screenshot 2026-09-10 095906" src="https://github.com/user-attachments/assets/307ae057-aed0-45cd-9fe3-820f690e653f" />
+
+<img width="1520" height="892" alt="Screenshot 2026-09-10 095924" src="https://github.com/user-attachments/assets/da091b64-efc8-4482-b6f3-b3bdba7e4144" />
+
+<img width="1517" height="848" alt="Screenshot 2026-09-10 095932" src="https://github.com/user-attachments/assets/2dae0d3a-dfb2-4f88-9749-45302b55a58a" />
+
+
+
