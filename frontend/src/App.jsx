@@ -1,9 +1,16 @@
 import React, { useState } from "react";
-import { Upload, FileText, Sparkles, Download, CheckCircle2, AlertCircle, BriefcaseBusiness, GraduationCap, X, RotateCcw, LoaderCircle } from "lucide-react";
+import { Upload, FileText, Sparkles, Download, CheckCircle2, AlertCircle, BriefcaseBusiness, GraduationCap, X, RotateCcw, LoaderCircle, ShieldCheck, Clock3, ArrowUpRight } from "lucide-react";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
+import { getDocument } from "pdfjs-dist";
 
 const API = `${window.location.protocol}//${window.location.hostname}:8080/api/screen/analyze`;
+const EMPTY_FILE_ERROR = "Empty files can't be uploaded.";
+const INVALID_PDF_ERROR = "This PDF does not appear to be a resume. Only resume files can be uploaded.";
+const RESUME_SIGNALS = [
+  "experience", "education", "skills", "employment", "work history",
+  "objective", "summary", "projects", "certifications", "linkedin"
+];
 
 function App() {
   const [file, setFile] = useState(null);
@@ -13,17 +20,63 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  function handleFileChange(event) {
+  async function validatePdf(file) {
+    const document = await getDocument({
+      data: await file.arrayBuffer(),
+      disableWorker: true
+    }).promise;
+    let text = "";
+
+    try {
+      for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
+        const page = await document.getPage(pageNumber);
+        const content = await page.getTextContent();
+        text += ` ${content.items.map(item => item.str || "").join(" ")}`;
+      }
+    } finally {
+      await document.destroy();
+    }
+
+    const normalizedText = text.toLowerCase();
+    const matchingSignals = RESUME_SIGNALS.filter(signal => normalizedText.includes(signal));
+    return normalizedText.trim().length >= 80 && matchingSignals.length >= 2;
+  }
+
+  async function handleFileChange(event) {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) return;
+    setFile(null);
     if (!/\.(pdf|docx)$/i.test(selectedFile.name)) {
+      event.target.value = "";
       setError("Choose a PDF or DOCX resume.");
       return;
     }
     if (selectedFile.size > 5 * 1024 * 1024) {
+      event.target.value = "";
       setError("Resume files must be smaller than 5 MB.");
       return;
     }
+    if (selectedFile.size === 0) {
+      event.target.value = "";
+      setError(EMPTY_FILE_ERROR);
+      return;
+    }
+
+    if (/\.pdf$/i.test(selectedFile.name)) {
+      setError("Checking that the PDF contains resume content...");
+      try {
+        if (!(await validatePdf(selectedFile))) {
+          event.target.value = "";
+          setError(INVALID_PDF_ERROR);
+          return;
+        }
+      } catch {
+        event.target.value = "";
+        setError("This PDF could not be read. Upload a valid resume PDF.");
+        return;
+      }
+    }
+
     setError("");
     setFile(selectedFile);
   }
@@ -40,6 +93,10 @@ function App() {
     setError("");
     setResult(null);
 
+    if (file?.size === 0) {
+      setError(EMPTY_FILE_ERROR);
+      return;
+    }
     if (!file && !resumeText.trim()) {
       setError("Please upload a resume or paste resume text.");
       return;
@@ -101,15 +158,24 @@ function App() {
       </header>
 
       <main className="container">
-        <section className="hero">
-          <p className="eyebrow"><span /> AI-ASSISTED TALENT REVIEW</p>
-          <h1>Turn a resume into a <em>clear next step.</em></h1>
-          <p>Compare candidate evidence with a role in seconds, then walk into the interview with a sharper point of view.</p>
-        </section>
+        <div className="hero-layout">
+          <section className="hero">
+            <p className="eyebrow"><span /> AI-ASSISTED TALENT REVIEW</p>
+            <h1>Turn a resume into a <em>clear next step.</em></h1>
+            <p>Compare candidate evidence with a role in seconds, then walk into the interview with a sharper point of view.</p>
+          </section>
+          <aside className="hero-note">
+            <div className="note-topline"><span>WORKSPACE NOTE</span><ArrowUpRight size={17}/></div>
+            <strong>Good screening starts with better evidence.</strong>
+            <div className="note-detail"><ShieldCheck size={16}/><span>Private, evidence-led review</span></div>
+            <div className="note-detail"><Clock3 size={16}/><span>Results in under a minute</span></div>
+          </aside>
+        </div>
 
         <section className="input-grid">
           <div className="card">
             <div className="section-kicker"><span>01</span><h2><FileText size={20}/> Candidate resume</h2></div>
+            <p className="section-copy">Give the reviewer a clear picture of the candidate's experience.</p>
             <label className={`dropzone ${file ? "has-file" : ""}`}>
               <Upload size={30}/>
               <strong>{file ? file.name : "Upload PDF or DOCX"}</strong>
@@ -128,6 +194,7 @@ function App() {
 
           <div className="card">
             <div className="section-kicker"><span>02</span><h2><BriefcaseBusiness size={20}/> Target role</h2></div>
+            <p className="section-copy">Paste the role requirements to create a focused comparison.</p>
             <textarea
               className="jd"
               value={jobDescription}

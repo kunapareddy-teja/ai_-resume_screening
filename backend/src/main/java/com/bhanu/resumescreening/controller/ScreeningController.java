@@ -1,15 +1,20 @@
 package com.bhanu.resumescreening.controller;
 
-import com.bhanu.resumescreening.model.ScreeningResponse;
-import com.bhanu.resumescreening.service.GeminiService;
-import com.bhanu.resumescreening.service.ResumeParserService;
-import org.springframework.http.MediaType;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Map;
+import com.bhanu.resumescreening.model.ScreeningResponse;
+import com.bhanu.resumescreening.service.ResumeAnalysisService;
+import com.bhanu.resumescreening.service.ResumeParserService;
 
 @RestController
 @RequestMapping("/api/screen")
@@ -17,11 +22,11 @@ import java.util.Map;
 public class ScreeningController {
 
     private final ResumeParserService parserService;
-    private final GeminiService geminiService;
+    private final ResumeAnalysisService analysisService;
 
-    public ScreeningController(ResumeParserService parserService, GeminiService geminiService) {
+    public ScreeningController(ResumeParserService parserService, ResumeAnalysisService analysisService) {
         this.parserService = parserService;
-        this.geminiService = geminiService;
+        this.analysisService = analysisService;
     }
 
     @PostMapping(value = "/analyze", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -46,7 +51,7 @@ public class ScreeningController {
                 return ResponseEntity.badRequest().body(Map.of("error", "Upload a PDF/DOCX resume or paste resume text."));
             }
 
-            ScreeningResponse result = geminiService.analyze(resume, jobDescription);
+            ScreeningResponse result = analysisService.analyze(resume, jobDescription);
             return ResponseEntity.ok(result);
 
         } catch (IllegalArgumentException e) {
